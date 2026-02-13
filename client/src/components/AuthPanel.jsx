@@ -1,41 +1,53 @@
 import { useState } from 'react';
 
-const CREDENTIALS = {
-  username: 'admin',
-  password: 'Admin@123'
+const DEMO_USERS = {
+  citizen: { username: 'citizen', password: 'Citizen@123', fullName: 'Community Citizen' },
+  staff: { username: 'staff', password: 'Staff@123', fullName: 'Support Staff' },
+  admin: { username: 'admin', password: 'Admin@123', fullName: 'Platform Admin' }
 };
 
 export default function AuthPanel({ onAuthenticated }) {
-  const [form, setForm] = useState({ username: '', password: '' });
-  const [status, setStatus] = useState('Use demo credentials to continue.');
+  const [form, setForm] = useState({ role: 'citizen', username: '', password: '' });
+  const [status, setStatus] = useState('Select your portal role to continue.');
 
   function submitForm(event) {
     event.preventDefault();
 
-    const isValid =
-      form.username.trim() === CREDENTIALS.username && form.password === CREDENTIALS.password;
+    const selected = DEMO_USERS[form.role];
+    const valid =
+      selected && form.username.trim() === selected.username && form.password === selected.password;
 
-    if (!isValid) {
-      setStatus('Invalid credentials. Username: admin | Password: Admin@123');
+    if (!valid) {
+      setStatus('Invalid login for selected role. Use the demo credentials shown below.');
       return;
     }
 
-    setStatus('Signed in successfully. Redirecting to dashboard...');
+    setStatus(`Welcome ${selected.fullName}. Loading ${form.role} portal...`);
     onAuthenticated({
-      token: 'frontend-only-session',
+      token: `frontend-only-${form.role}`,
       user: {
-        username: CREDENTIALS.username,
-        fullName: 'Platform Admin'
+        username: selected.username,
+        fullName: selected.fullName,
+        role: form.role
       }
     });
   }
 
   return (
-    <div className="card auth-card">
-      <div className="auth-glow" />
-      <h2>Secure Sign In</h2>
-      <p>Backend is disconnected. This login is fully local for UI development.</p>
+    <div className="portal-card auth-card">
+      <h2>Elite Sign In</h2>
+      <p>Choose your role and enter credentials to access your dedicated portal experience.</p>
+
       <form onSubmit={submitForm}>
+        <select
+          value={form.role}
+          onChange={(e) => setForm({ ...form, role: e.target.value })}
+          aria-label="Select role"
+        >
+          <option value="citizen">Citizen Portal</option>
+          <option value="staff">Staff Portal</option>
+          <option value="admin">Admin Control Center</option>
+        </select>
         <input
           placeholder="Username"
           value={form.username}
@@ -49,12 +61,14 @@ export default function AuthPanel({ onAuthenticated }) {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           required
         />
-        <button type="submit">Sign In</button>
+        <button type="submit">Enter Portal</button>
       </form>
+
       <div className="demo-credentials">
-        <strong>Demo Access</strong>
-        <span>Username: admin</span>
-        <span>Password: Admin@123</span>
+        <strong>Demo Accounts</strong>
+        <span>Citizen → citizen / Citizen@123</span>
+        <span>Staff → staff / Staff@123</span>
+        <span>Admin → admin / Admin@123</span>
       </div>
       <small>{status}</small>
     </div>

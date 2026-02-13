@@ -3,62 +3,95 @@ import { useState } from 'react';
 const initial = {
   title: '',
   description: '',
+  area: '',
   category: 'Waste',
   severity: 'Medium',
   latitude: '',
   longitude: ''
 };
 
-export default function IssueForm({ user, onCreated }) {
-  const [form, setForm] = useState(initial);
-  const [message, setMessage] = useState('');
-
-  function captureLocation() {
+function getCurrentPosition() {
+  return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      setMessage('Geolocation API is unavailable in this browser.');
+      reject(new Error('Geolocation API is unavailable in this browser.'));
       return;
     }
 
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+}
+
+export default function IssueForm({ user, onCreated, onRequireMap }) {
+  const [form, setForm] = useState(initial);
+  const [message, setMessage] = useState('Fill area manually or leave it blank to auto-capture location.');
+
+  async function captureLocation() {
     setMessage('Capturing current location...');
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setForm((prev) => ({
-          ...prev,
-          latitude: Number(position.coords.latitude.toFixed(6)),
-          longitude: Number(position.coords.longitude.toFixed(6))
-        }));
-        setMessage('Current location attached.');
-      },
-      () => {
-        setMessage('Could not access your location. Please enter coordinates manually.');
-      }
-    );
+
+    try {
+      const position = await getCurrentPosition();
+      const lat = Number(position.coords.latitude.toFixed(6));
+      const lng = Number(position.coords.longitude.toFixed(6));
+
+      setForm((prev) => ({
+        ...prev,
+        latitude: lat,
+        longitude: lng,
+        area: prev.area || `Auto area near ${lat}, ${lng}`
+      }));
+      setMessage('Location captured. Area filled automatically.');
+      onRequireMap();
+    } catch {
+      setMessage('Could not access your location. Please provide area and coordinates manually.');
+    }
   }
 
-  function submitIssue(event) {
+  async function submitIssue(event) {
     event.preventDefault();
+
+    let latitude = Number(form.latitude);
+    let longitude = Number(form.longitude);
+    let area = form.area.trim();
+
+    if (!area) {
+      try {
+        const position = await getCurrentPosition();
+        latitude = Number(position.coords.latitude.toFixed(6));
+        longitude = Number(position.coords.longitude.toFixed(6));
+        area = `Auto area near ${latitude}, ${longitude}`;
+        onRequireMap();
+      } catch {
+        setMessage('Area is required. Allow location or provide area manually.');
+        return;
+      }
+    }
+
+    if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+      setMessage('Please provide valid coordinates or allow geolocation.');
+      return;
+    }
 
     const newIssue = {
       id: Date.now(),
       ...form,
-      latitude: Number(form.latitude),
-      longitude: Number(form.longitude),
-      reportedBy: user.username
+      area,
+      latitude,
+      longitude,
+      reportedBy: user.username,
+      reportedByRole: user.role,
+      status: 'Kept',
+      supportNote: 'Request kept for staff review.',
+      createdAt: new Date().toISOString()
     };
 
-    if (Number.isNaN(newIssue.latitude) || Number.isNaN(newIssue.longitude)) {
-      setMessage('Please provide valid coordinates.');
-      return;
-    }
-
     onCreated(newIssue);
-    setMessage('Issue added locally and shown on map.');
+    setMessage('Request submitted and kept for staff review.');
     setForm(initial);
   }
 
   return (
-    <div className="card floating-card">
-      <h3>Report an Issue</h3>
+    <div className="portal-card citizen-panel">
+      <h3>Raise Environmental Request</h3>
       <form onSubmit={submitIssue} className="issue-form">
         <input
           placeholder="Issue title"
@@ -72,6 +105,11 @@ export default function IssueForm({ user, onCreated }) {
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           required
+        />
+        <input
+          placeholder="Area / locality (optional if geolocation is allowed)"
+          value={form.area}
+          onChange={(e) => setForm({ ...form, area: e.target.value })}
         />
         <div className="row">
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
@@ -95,7 +133,7 @@ export default function IssueForm({ user, onCreated }) {
             placeholder="Latitude"
             value={form.latitude}
             onChange={(e) => setForm({ ...form, latitude: e.target.value })}
-            required
+            required={Boolean(form.area)}
           />
           <input
             type="number"
@@ -103,13 +141,13 @@ export default function IssueForm({ user, onCreated }) {
             placeholder="Longitude"
             value={form.longitude}
             onChange={(e) => setForm({ ...form, longitude: e.target.value })}
-            required
+            required={Boolean(form.area)}
           />
         </div>
         <button type="button" className="ghost-btn" onClick={captureLocation}>
-          Use my current location
+          Fetch my location + show map
         </button>
-        <button type="submit">Save report locally</button>
+        <button type="submit">Submit Request</button>
       </form>
       <small>{message}</small>
     </div>

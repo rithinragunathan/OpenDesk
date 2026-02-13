@@ -1,31 +1,23 @@
+# EcoReport Elite Console (Frontend Only)
 
-# EcoReport Community Platform (Frontend Only)
+This version provides distinct role-based UX with richer animation and glass UI:
 
-A modern, UI-focused React app for reporting environmental issues locally and visualizing them on an interactive Leaflet map.
+- **Citizen Portal**: submit requests with area, auto-fetch location if needed, track status (`Kept`, `In Review`, `Resolved`, `Declined`).
+- **Staff Portal**: review requests from multiple citizens and mark issues as `Resolved` or `Declined`.
+- **Admin Control Center**: full monitoring access, status updates, support notes, system health/requests metrics.
 
-## What Changed
-- Backend dependency removed from local development workflow.
-- `npm run dev` now starts only the frontend.
-- Authentication is local and demo-only for UI work:
-  - **Username:** `admin`
-  - **Password:** `Admin@123`
-- Issue reports are stored in browser `localStorage` and instantly displayed on the map.
+## Demo Accounts
+- Citizen: `citizen` / `Citizen@123`
+- Staff: `staff` / `Staff@123`
+- Admin: `admin` / `Admin@123`
 
-## Tech Stack
-- React + Vite
-- Leaflet.js + React Leaflet
-- Browser Geolocation API
-- localStorage for local session + issue persistence
+## UX Notes
+- Map is **on-demand** (toggle button), not always visible.
+- If citizen does not provide area, app attempts geolocation and auto-fills area/coordinates.
+- All data persists in browser `localStorage`.
 
-## Run Locally
-
+## Run
 ```bash
 npm install
 npm run dev
 ```
-
-Open: `http://localhost:5173`
-
-## Notes
-- This setup is intentionally frontend-only for fast UI editing and prototyping.
-- No PostgreSQL, Express server, JWT verification, or Google OAuth setup is required in this mode.
