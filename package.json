@@ -1,0 +1,11 @@
+{
+  "name": "opendesk-environmental-platform",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["client"],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev": "npm run dev --workspace client",
+    "build": "npm run build --workspace client"
+  }
+}
