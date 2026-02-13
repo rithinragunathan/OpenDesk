@@ -13,8 +13,9 @@ export default function IssuesMap({ issues }) {
   const center = issues.length ? [issues[0].latitude, issues[0].longitude] : [20.5937, 78.9629];
 
   return (
-    <div className="card map-card">
-      <h3>Live Environmental Issues Map</h3>
+    <div className="card map-card floating-card">
+      <h3>Environmental Issues Map</h3>
+      <p className="map-hint">All markers are rendered from local frontend state for design-time testing.</p>
       <MapContainer center={center} zoom={issues.length ? 11 : 4} scrollWheelZoom style={{ height: '360px' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

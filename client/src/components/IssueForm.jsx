@@ -9,7 +9,7 @@ const initial = {
   longitude: ''
 };
 
-export default function IssueForm({ token, onCreated }) {
+export default function IssueForm({ user, onCreated }) {
   const [form, setForm] = useState(initial);
   const [message, setMessage] = useState('');
 
@@ -35,38 +35,29 @@ export default function IssueForm({ token, onCreated }) {
     );
   }
 
-  async function submitIssue(event) {
+  function submitIssue(event) {
     event.preventDefault();
-    setMessage('Submitting issue...');
 
-    const payload = {
+    const newIssue = {
+      id: Date.now(),
       ...form,
       latitude: Number(form.latitude),
-      longitude: Number(form.longitude)
+      longitude: Number(form.longitude),
+      reportedBy: user.username
     };
 
-    const response = await fetch('/api/issues', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      setMessage(data.message || 'Could not submit issue.');
+    if (Number.isNaN(newIssue.latitude) || Number.isNaN(newIssue.longitude)) {
+      setMessage('Please provide valid coordinates.');
       return;
     }
 
-    setMessage('Issue reported successfully.');
+    onCreated(newIssue);
+    setMessage('Issue added locally and shown on map.');
     setForm(initial);
-    onCreated();
   }
 
   return (
-    <div className="card">
+    <div className="card floating-card">
       <h3>Report an Issue</h3>
       <form onSubmit={submitIssue} className="issue-form">
         <input
@@ -118,7 +109,7 @@ export default function IssueForm({ token, onCreated }) {
         <button type="button" className="ghost-btn" onClick={captureLocation}>
           Use my current location
         </button>
-        <button type="submit">Submit report</button>
+        <button type="submit">Save report locally</button>
       </form>
       <small>{message}</small>
     </div>
