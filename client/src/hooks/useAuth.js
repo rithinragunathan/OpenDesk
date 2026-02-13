@@ -12,7 +12,7 @@ export function useAuth() {
 
   const isAuthenticated = useMemo(() => Boolean(token && user), [token, user]);
 
-  function saveSession(nextToken, nextUser) {
+  function saveSession({ token: nextToken, user: nextUser }) {
     localStorage.setItem(TOKEN_KEY, nextToken);
     localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
     setToken(nextToken);

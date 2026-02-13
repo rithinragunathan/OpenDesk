@@ -1,82 +1,45 @@
 import { useState } from 'react';
 
-const initialForm = {
-  fullName: '',
-  email: '',
-  password: ''
+const CREDENTIALS = {
+  username: 'admin',
+  password: 'Admin@123'
 };
 
 export default function AuthPanel({ onAuthenticated }) {
-  const [mode, setMode] = useState('login');
-  const [form, setForm] = useState(initialForm);
-  const [status, setStatus] = useState('');
+  const [form, setForm] = useState({ username: '', password: '' });
+  const [status, setStatus] = useState('Use demo credentials to continue.');
 
-  async function submitForm(event) {
+  function submitForm(event) {
     event.preventDefault();
-    setStatus('Authenticating...');
 
-    const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+    const isValid =
+      form.username.trim() === CREDENTIALS.username && form.password === CREDENTIALS.password;
 
-    const payload =
-      mode === 'login'
-        ? { email: form.email, password: form.password }
-        : { fullName: form.fullName, email: form.email, password: form.password };
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setStatus(data.message || 'Authentication failed.');
+    if (!isValid) {
+      setStatus('Invalid credentials. Username: admin | Password: Admin@123');
       return;
     }
 
-    setStatus('Authenticated successfully.');
-    onAuthenticated(data);
-  }
-
-  async function handleGoogle() {
-    const idToken = window.prompt('Paste Google ID token here (from Google Sign-In flow):');
-    if (!idToken) return;
-
-    setStatus('Verifying Google account...');
-    const response = await fetch('/api/auth/google', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken })
+    setStatus('Signed in successfully. Redirecting to dashboard...');
+    onAuthenticated({
+      token: 'frontend-only-session',
+      user: {
+        username: CREDENTIALS.username,
+        fullName: 'Platform Admin'
+      }
     });
-
-    const data = await response.json();
-    if (!response.ok) {
-      setStatus(data.message || 'Google Sign-In failed.');
-      return;
-    }
-
-    onAuthenticated(data);
   }
 
   return (
     <div className="card auth-card">
-      <h2>Community Access</h2>
-      <p>Sign in to report local environmental concerns and monitor status updates.</p>
+      <div className="auth-glow" />
+      <h2>Secure Sign In</h2>
+      <p>Backend is disconnected. This login is fully local for UI development.</p>
       <form onSubmit={submitForm}>
-        {mode === 'register' && (
-          <input
-            placeholder="Full Name"
-            value={form.fullName}
-            onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-            required
-          />
-        )}
         <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          placeholder="Username"
+          value={form.username}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
           required
         />
         <input
@@ -85,20 +48,14 @@ export default function AuthPanel({ onAuthenticated }) {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           required
-          minLength={8}
         />
-        <button type="submit">{mode === 'login' ? 'Login' : 'Create account'}</button>
+        <button type="submit">Sign In</button>
       </form>
-      <button className="ghost-btn" onClick={handleGoogle} type="button">
-        Continue with Google
-      </button>
-      <button
-        className="switch-btn"
-        onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-        type="button"
-      >
-        {mode === 'login' ? 'Need an account? Register' : 'Already have an account? Login'}
-      </button>
+      <div className="demo-credentials">
+        <strong>Demo Access</strong>
+        <span>Username: admin</span>
+        <span>Password: Admin@123</span>
+      </div>
       <small>{status}</small>
     </div>
   );
