@@ -1,3 +1,4 @@
+
 # EcoReport Community Platform (Frontend Only)
 
 A modern, UI-focused React app for reporting environmental issues locally and visualizing them on an interactive Leaflet map.
